@@ -17,31 +17,53 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
-
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-n7r1afpa=0x5hcp@q78urb8@+=7ae8jqskcb2mu)&ep09zo()z'
-
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
 
 
+
 # Application definition
 
+
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
+    # Django built-in applications configured for MongoDB
+    'config.apps.MongoAdminConfig',
+    'config.apps.MongoAuthConfig',
+    'config.apps.MongoContentTypesConfig',
+
+    # Django sessions and other built-in applications
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_mongodb_backend',	
+
+    # MongoDB backend
+    'django_mongodb_backend',
+
+    # Django REST Framework
+    'rest_framework',
+
+    # Bignay Alert applications
+    'apps.users',
+    'apps.incidents',
+    'apps.responders',
+    'apps.announcements',
+    'apps.activity_logs',
 ]
+
+DEFAULT_AUTO_FIELD = 'django_mongodb_backend.fields.ObjectIdAutoField'
+
+MIGRATION_MODULES = {
+    'admin': 'mongo_migrations.admin',
+    'auth': 'mongo_migrations.auth',
+    'contenttypes': 'mongo_migrations.contenttypes',
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -77,6 +99,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
 MONGODB_URI = os.getenv('MONGODB_URI')
+
+if not MONGODB_URI:
+    raise ValueError("MONGODB_URI is missing from the environment variables.")
+
 DATABASES = {
     'default': {
         'ENGINE': 'django_mongodb_backend',
@@ -86,9 +112,9 @@ DATABASES = {
 }
 
 
-MONGODB_URI = os.getenv('MONGODB_URI')
 
-# Password validation
+
+
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -128,12 +154,7 @@ STATIC_URL = 'static/'
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
-}
-
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Bignay Alert static files
 STATICFILES_DIRS = [
